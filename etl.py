@@ -55,10 +55,10 @@ def process_log_data(spark, input_data, output_data):
     
     df = df.filter(df.page == "NextSong")
   
-    users_table = df.select([df.userId.alias('user_id'), \
-                             df.firstName.alias('first_name'), \
-                             df.lastName.alias('last_name'), \
-                             df.gender, \
+    users_table = df.select([df.userId.alias('user_id'), 
+                             df.firstName.alias('first_name'), 
+                             df.lastName.alias('last_name'), 
+                             df.gender, 
                              df.level]).dropDuplicates()
     
     # write users table to parquet files
@@ -74,7 +74,7 @@ def process_log_data(spark, input_data, output_data):
                             month(df.start_time).alias('month'),
                             year(df.start_time).alias('year'),
                             dayofweek(df.start_time).alias('weekday'),
-                            date_format(df.start_time).alias('datetime')).dropDuplicates()
+                            date_format(df.start_time, 'yyyy-MM-dd').alias('datetime')).dropDuplicates()
     
 
     time_table.write.partitionBy(['year','month']).parquet(output_data + 'time/')
