@@ -4,7 +4,7 @@ import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf, col
 from pyspark.sql.functions import year, month, dayofmonth, hour, weekofyear, dayofweek, date_format
-
+from pyspark.sql.types import StructType, StructField, DoubleType, StringType, IntegerType, DataType, TimestampType 
 
 config = configparser.ConfigParser()
 config.read('dl.cfg')
@@ -26,8 +26,20 @@ def process_song_data(spark, input_data, output_data):
     Process the set of songs json files from S3. Save the dataframes processed in parquet fomrat in S3.
     """
     song_data = input_data+'song_data/*/*/*/*.json'
+
+    song_schema = StructType([
+                            StructField("artist_id", StringType()),
+                            StructField("artist_latitude", DoubleType()),
+                            StructField("artist_location",StringType()),
+                            StructField("artist_longitude",DoubleType()),
+                            StructField("artist_name",StringType()),
+                            StructField("duration",DoubleType()),
+                            StructField("num_songs",IntegerType()),
+                            StructField("title",StringType()),
+                            StructField("year",IntegerType()),
+                            ])
     
-    df = spark.read.json(song_data)
+    df = spark.read.json(song_data, schema=song_schema)
 
     fields = ['song_id','title','artist_id','year','duration']
     songs_table = df.select(fields).dropDuplicates()
@@ -79,8 +91,8 @@ def process_log_data(spark, input_data, output_data):
 
     time_table.write.partitionBy(['year','month']).parquet(output_data + 'time/')
 
-    songs_df = spark.read.parquet(output_data  + 'songs/*')
-    artists_df = spark.read.parquet(output_data + 'artists/*')
+    songs_df = spark.read.parquet(output_data  + 'songs/')
+    artists_df = spark.read.parquet(output_data + 'artists/')
 
     songs_logs = df.join(songs_df, (df.song == songs_df.title))
     artists_songs_logs = songs_logs.join(artists_df, (songs_logs.artist == artists_df.name))
@@ -91,13 +103,13 @@ def process_log_data(spark, input_data, output_data):
                                         )
 
     # extract columns from joined song and log datasets to create songplays table 
-    songplays_table = songplays.select( col('start_time').alias('start_time'),
+    songplays_table = songplays.select( col('start_time'),
                                         col('userId').alias('user_id'),
                                         col('level').alias('level'),
-                                        col('song_id').alias('song_id'),
-                                        col('artist_id').alias('artist_id'),
+                                        col('song_id'),
+                                        col('artist_id'),
                                         col('sessionId').alias('session_id'),
-                                        col('location').alias('location'),
+                                        col('location'),
                                         col('userAgent').alias('user_agent'),
                                         col('year').alias('year'),
                                         col('month').alias('month')
