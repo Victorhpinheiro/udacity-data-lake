@@ -33,6 +33,7 @@ def process_song_data(spark, input_data, output_data):
                             StructField("artist_location",StringType()),
                             StructField("artist_longitude",DoubleType()),
                             StructField("artist_name",StringType()),
+                            StructField("song_id",StringType()),
                             StructField("duration",DoubleType()),
                             StructField("num_songs",IntegerType()),
                             StructField("title",StringType()),
